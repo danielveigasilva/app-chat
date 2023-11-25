@@ -80,7 +80,7 @@ export default function App() {
             onSubmitEditing={handleSendMenssage}
             multiline={true}
             onContentSizeChange={handleContentSizeChange}/>
-          <TouchableOpacity style={{alignSelf:"flex-end", alignItems:"flex-end"}} onPress={handleSendMenssage}>
+          <TouchableOpacity style={{alignSelf:"flex-end", alignItems:"flex-end"}} onPress={handleSendMenssage} disabled={menssage.trim() == ''}>
             <MaterialIcons 
               name="send" 
               size={40} 
