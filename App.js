@@ -1,21 +1,73 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, FlatList, SafeAreaView, Keyboard, TouchableWithoutFeedback } from 'react-native';
+import { StyleSheet, Text, View, TextInput, KeyboardAvoidingView, TouchableOpacity, FlatList, SafeAreaView, Keyboard, Platform } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons'
+import PubNub from 'pubnub'
 
 export default function App() {
 
-  const [menssage, setMenssage] = useState('')
-  const [listMsg, setlistMsg] = useState([{'text': 'tesra teudaodasas', 'time': new Date().toLocaleString(), 'username': 'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45},{'text': 'tesfsdasd asdas da asd ada s asd as asd asdasdasda asdasdasd afrec gerds', 'time': new Date().toLocaleString(), 'username': 'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45}])
-  const [myUsername, setMyUsername] = useState('user' +  'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45)
+  const [menssage, setMenssage] = useState('');
+  const [listMsg, setlistMsg] = useState([]);
+  const [myUsername, setMyUsername] = useState('user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45);
   const [inputHeight, setInputHeight] = useState(30);
-
+  const [initialFetchDone, setInitialFetchDone] = useState(false);
+  const [channel, setChannel] = useState('chat_2');
   const flatListRef = useRef(null);
+
+  const pubnub = new PubNub({
+    publishKey: "pub-c-0ac996e3-d9d5-46d7-93e6-a15ac13e2fb5",
+    subscribeKey: "sub-c-3b34aa41-83f6-4523-ba18-20ddebb9c378",
+    userId: myUsername,
+  });
+
+  useEffect(() => {
+    pubnub.addListener({
+      message: (msg) => {
+        setlistMsg([...listMsg, {'text': msg.message, 'time': new Date(msg.timetoken/10000).toLocaleString(), 'username': msg.publisher}]);
+      },
+    });
+
+    pubnub.subscribe({
+      channels: [channel],
+    });
+
+    if (!initialFetchDone){
+      pubnub.fetchMessages(
+        {
+            channels: [channel],
+            end: '15343325004275466'
+        },
+        (status, response) => {
+          if(response != null){
+            let listOld = response.channels[channel].map((msg) => {
+              return {'text': msg.message, 'time': new Date(msg.timetoken/10000).toLocaleString(), 'username': msg.uuid}
+            })
+            setlistMsg(listOld);
+            setInitialFetchDone(true);
+          }
+        }
+      );
+    }
+
+    return () => {
+      pubnub.unsubscribeAll();
+    };
+  }, [listMsg, initialFetchDone]);
 
   const handleSendMenssage = () => {
     if (menssage.trim() != ''){
-      setlistMsg([...listMsg, {'text': menssage, 'time': new Date().toLocaleString(), 'username': myUsername}]);
       setMenssage('');
+      pubnub.publish(
+        {
+          channel: channel,
+          message: menssage
+        },
+        function(status, response) {
+          if (status.erro){
+            console.log(status);
+          }
+        }
+      );
     }
   };
 
@@ -58,11 +110,12 @@ export default function App() {
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 70}
     >
       <SafeAreaView style={styles.inner} onPress={dismissKeyboard}>
         <View style={styles.topBar}>
-          <Text style={{fontSize: 18,fontWeight: 'bold'}}>CHAT ANÔNIMO</Text>
+          <Text>{myUsername}</Text>
+          <Text style={{fontSize: 18,fontWeight: 'bold'}}>{"Bate Papo"}</Text>
         </View>
         <FlatList
           ref={flatListRef}
@@ -80,7 +133,7 @@ export default function App() {
             onSubmitEditing={handleSendMenssage}
             multiline={true}
             onContentSizeChange={handleContentSizeChange}/>
-          <TouchableOpacity style={{alignSelf:"flex-end", alignItems:"flex-end"}} onPress={handleSendMenssage} disabled={menssage.trim() == ''}>
+          <TouchableOpacity style={{alignSelf:"flex-end", alignItems:"center", width: "17%"}} onPress={handleSendMenssage} disabled={menssage.trim() == ''}>
             <MaterialIcons 
               name="send" 
               size={40} 
@@ -100,12 +153,12 @@ const styles = StyleSheet.create({
   },
   inner: {
     flex: 1,
-    justifyContent: "flex-end",
+    justifyContent: "flex-end"
   },
   inputContainer: {
     backgroundColor: '#c0c4cd',
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems:"center",
     padding: 10,
   },
   input: {
@@ -118,7 +171,7 @@ const styles = StyleSheet.create({
     marginLeft: 15,
   },
   icon: {
-    alignSelf: "flex-end",
+    alignSelf: "center",
     marginLeft: 10,
     marginRight: 15,
   },
