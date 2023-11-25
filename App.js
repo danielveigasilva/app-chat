@@ -8,6 +8,8 @@ export default function App() {
   const [menssage, setMenssage] = useState('')
   const [listMsg, setlistMsg] = useState([{'text': 'tesra teudaodasas', 'time': new Date().toLocaleString(), 'username': 'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45},{'text': 'tesfsdasd asdas da asd ada s asd as asd asdasdasda asdasdasd afrec gerds', 'time': new Date().toLocaleString(), 'username': 'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45}])
   const [myUsername, setMyUsername] = useState('user' +  'user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45)
+  const [inputHeight, setInputHeight] = useState(30);
+
   const flatListRef = useRef(null);
 
   const handleSendMenssage = () => {
@@ -25,6 +27,11 @@ export default function App() {
 
   const dismissKeyboard = () => {
     Keyboard.dismiss();
+  };
+
+  const handleContentSizeChange = (event) => {
+    const { height } = event.nativeEvent.contentSize;
+    setInputHeight(Math.min(Math.max(30, height), 90));
   };
 
   const messageBalloon = ({ item }) => {
@@ -69,10 +76,11 @@ export default function App() {
           <TextInput
             value={menssage}
             onChangeText={setMenssage}
-            style={styles.input}
+            style={[styles.input, { height: inputHeight }]}
             onSubmitEditing={handleSendMenssage}
-            multiline={true}/>
-          <TouchableOpacity onPress={handleSendMenssage}>
+            multiline={true}
+            onContentSizeChange={handleContentSizeChange}/>
+          <TouchableOpacity style={{alignSelf:"flex-end", alignItems:"flex-end"}} onPress={handleSendMenssage}>
             <MaterialIcons 
               name="send" 
               size={40} 
@@ -102,16 +110,17 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: '#ffffff',
-    width: "85%",
-    borderRadius: 20,
+    width: "83%",
+    borderRadius: 15,
     alignSelf: "center",
-    height: 40,
     borderWidth: 0,
     paddingLeft: 15,
+    marginLeft: 15,
   },
   icon: {
-    alignSelf: "center",
+    alignSelf: "flex-end",
     marginLeft: 10,
+    marginRight: 15,
   },
   balloonOther: {
     backgroundColor: '#e5e5e5',
