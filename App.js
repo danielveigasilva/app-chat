@@ -11,7 +11,7 @@ export default function App() {
   const [myUsername, setMyUsername] = useState('user' +  Math.floor(Math.random() * (8123 - 45 + 1)) + 45);
   const [inputHeight, setInputHeight] = useState(30);
   const [initialFetchDone, setInitialFetchDone] = useState(false);
-  const [channel, setChannel] = useState('chat_2');
+  const [channel, setChannel] = useState('chat_4');
   const flatListRef = useRef(null);
 
   const pubnub = new PubNub({
